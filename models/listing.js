@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const Review = require("./review.js")
 
 const listingSchema = new Schema({
     title:{
@@ -8,13 +9,41 @@ const listingSchema = new Schema({
     },
     description: String,
     image:{
-        type:String,
-        default:"https://images.unsplash.com/photo-1573561507036-b0110570e2e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8c3Vuc2V0JTIwYmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=600&q=60",
-        set: (v)=> v ==="" ? "https://images.unsplash.com/photo-1573561507036-b0110570e2e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8c3Vuc2V0JTIwYmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=600&q=60" : v,
+        // type:String,
+        // default:"https://images.unsplash.com/photo-1573561507036-b0110570e2e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8c3Vuc2V0JTIwYmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=600&q=60",
+        // set: (v)=> v ==="" ? "https://images.unsplash.com/photo-1573561507036-b0110570e2e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8c3Vuc2V0JTIwYmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=600&q=60" : v,
+        url: String,
+        filename: String,
     },
     price: Number,
     location: String,
-    country: String
+    country: String,
+    reviews : [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Review"
+        }
+    ],
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+    },
+    geometry: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true,
+        },
+        coordinates: {
+            type: [Number],
+            required: true,
+        }
+    }
+});
+listingSchema.post("findOneAndDelete" , async(listing)=>{
+    if(listing){
+      await Review.deleteMany({_id : {$in : listing.reviews}});
+    }
 });
 
 const Listing = mongoose.model("Listing", listingSchema);
